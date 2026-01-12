@@ -1,0 +1,31 @@
+{
+  "synonyms": {
+    "high temperature": "fever",
+    "febrile": "fever",
+    "head hurts": "headache",
+    "tummy ache": "abdominal_pain"
+  },
+  "diseases": [
+    {
+      "name": "Common Cold",
+      "required": ["cough", "sneezing", "sore_throat"],
+      "optional": ["fatigue", "headache"],
+      "exclusions": ["high_fever"],
+      "description": "A viral infection of your nose and throat."
+    },
+    {
+      "name": "Influenza (Flu)",
+      "required": ["fever", "body_aches", "fatigue"],
+      "optional": ["cough", "headache"],
+      "exclusions": [],
+      "description": "A common viral infection that can be deadly."
+    },
+    {
+      "name": "Migraine",
+      "required": ["headache", "nausea"],
+      "optional": ["sensitivity_to_light"],
+      "exclusions": ["fever"],
+      "description": "A headache of varying intensity, often accompanied by nausea."
+    }
+  ]
+}

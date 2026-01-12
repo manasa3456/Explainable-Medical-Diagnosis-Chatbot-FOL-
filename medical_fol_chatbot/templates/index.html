@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Explainable Med-Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-2">Medical Diagnosis Chatbot</h1>
+        <p class="text-red-500 text-xs mb-6 uppercase font-bold">Educational Demo Only - Not Medical Advice</p>
+        
+        <div class="mb-4">
+            <label class="block mb-2 font-semibold">Enter Symptoms:</label>
+            <input id="symptomInput" type="text" 
+                   class="w-full border p-3 rounded shadow-sm" 
+                   placeholder="e.g. fever, cough, body aches">
+            <p class="text-gray-500 text-xs mt-1">Separate symptoms with commas</p>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="runDiagnosis()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Diagnose</button>
+            <button onclick="document.getElementById('symptomInput').value=''; document.getElementById('results').innerHTML=''" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
+        </div>
+
+        <div id="results" class="mt-8 space-y-4">
+            <!-- Results will appear here -->
+        </div>
+    </div>
+
+    <script>
+        async function runDiagnosis() {
+            const resultDiv = document.getElementById('results');
+            const input = document.getElementById('symptomInput').value;
+            
+            if (!input.trim()) {
+                resultDiv.innerHTML = '<p class="text-orange-500">Please enter at least one symptom.</p>';
+                return;
+            }
+
+            // Convert string to array and clean whitespace
+            const symptomsArray = input.split(',').map(s => s.trim()).filter(s => s !== "");
+            
+            resultDiv.innerHTML = '<p class="text-blue-500">Processing symptoms logic...</p>';
+
+            try {
+                const response = await fetch('/diagnose', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ symptoms: symptomsArray, mode: 'forward' })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.results || data.results.length === 0) {
+                    resultDiv.innerHTML = '<div class="p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-700">No matching diseases found for these symptoms. Try "fever, body aches".</div>';
+                    return;
+                }
+
+                let html = '<h2 class="text-xl font-bold mb-4">Possible Diagnoses:</h2>';
+                data.results.forEach(res => {
+                    html += `
+                        <div class="border-l-4 border-blue-500 p-4 bg-blue-50 rounded-r shadow-sm">
+                            <div class="flex justify-between items-center font-bold">
+                                <span class="text-lg text-blue-800">${res.disease}</span>
+                                <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm">${res.score}% Match</span>
+                            </div>
+                            <div class="text-sm mt-3 text-gray-700 italic">
+                                <strong>Reasoning Trace:</strong><br>
+                                ✅ Confirmed: ${res.trace.met_required.join(', ') || 'None'}<br>
+                                ❌ Missing: ${res.trace.missing_required.join(', ') || 'None'}<br>
+                                💡 Optional: ${res.trace.met_optional.join(', ') || 'None'}
+                            </div>
+                        </div>`;
+                });
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded text-red-700">
+                    <strong>Error:</strong> Could not connect to the backend. <br>
+                    Make sure you are running <code>python main.py</code> and accessing <code>http://127.0.0.1:8000</code>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
